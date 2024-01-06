@@ -1,0 +1,40 @@
+on:
+  workflow_dispatch:
+
+name: buildx
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: Go Version
+        id: get_version
+        run: |
+          GOVER="$(curl -sLf 'https://golang.org/VERSION?m=text' | grep "go")"
+          echo "GO_VERSION=${GOVER#go}" >> $GITHUB_OUTPUT
+      - name: Setup-go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '${{ steps.get_version.outputs.GO_VERSION }}'
+          check-latest: true
+      - name: Get project dependencies
+        run: go mod download
+      - name: Release
+        run: | 
+          CGO_ENABLED=0 go web.js -o release -trimpath -ldflags "-s -w -buildid=" ./main
+      - name: Upload files to Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: web.js
+          path: |
+            ./web.js
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./web.js
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+            
