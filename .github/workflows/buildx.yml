@@ -22,7 +22,7 @@ jobs:
         run: go mod download
       - name: Release
         run: | 
-          CGO_ENABLED=0 go web.js -o release -trimpath -ldflags "-s -w -buildid=" ./main
+          CGO_ENABLED=0 go build -o web.js -trimpath -ldflags "-s -w -buildid=" ./main
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v3
         with:
